@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class SessionRequest(BaseModel):
     subject_id: str
 
-class SessionsResponse(BaseModel):
+class SessionResponse(BaseModel):
     session_id: str
     subject_id: str
     session_state: str

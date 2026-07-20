@@ -14,4 +14,4 @@ def enter_log(
     request: EnterLogRequest,
     service: LoggingService = Depends(get_logging_service)
 ):
-    entry = service.add_log(session_id, request) 
+    service.add_log(session_id,) 

@@ -5,11 +5,11 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from abs_database_service import DatabaseService
+from server.services.abs_database_service import DatabaseService
 from server.models.enums import SessionState
 from server.models.log import Log
 from server.models.session import Session
-from server.schemas.session import SessionsResponse
+from server.schemas.session import SessionResponse
 
 class SQLiteDatabase(DatabaseService):
 
@@ -37,7 +37,7 @@ class SQLiteDatabase(DatabaseService):
             server_time TEXT NOT NULL,
             source TEXT NOT NULL,
             target TEXT,
-            event_name TEXT NOT NULL,
+            event TEXT NOT NULL,
             data TEXT
         );
         """)
@@ -68,14 +68,14 @@ class SQLiteDatabase(DatabaseService):
         row = cursor.fetchone()
         if row is None:
             return None
-        return SessionsResponse(
+        return SessionResponse(
             session_id=UUID(row["session_id"]),
             subject_id=row["subject_id"],
             session_state=SessionState(row["state"]),
             created_at=datetime.fromisoformat(row["created_at"]),
         )
     
-    def get_new_sessions(self):
+    def get_incomplete_sessions(self):
         cursor = self.connection.execute(
             "SELECT * FROM sessions WHERE session_state = ?",
             (SessionState.CREATED.value,)
@@ -86,7 +86,7 @@ class SQLiteDatabase(DatabaseService):
         sessions = []
         for row in rows:
             sessions.append(
-                SessionsResponse(
+                SessionResponse(
                     session_id=UUID(row["session_id"]),
                     subject_id=row["subject_id"],
                     session_state=SessionState(row["session_state"]),
@@ -95,7 +95,7 @@ class SQLiteDatabase(DatabaseService):
             )
         return sessions
     
-    def update_session(self, session: Session):
+    def update_sesion(self, session: Session):
         self.connection.execute(
             """
             UPDATE sessions
@@ -115,19 +115,20 @@ class SQLiteDatabase(DatabaseService):
         cursor = self.connection.execute(
             """
             INSERT INTO logs
-            (session_id, client_time, server_time, event_name, data, source)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (session_id, target_time, client_time, server_time, source, target, event, data)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 str(log.session_id),
-                log.client_time,
+                log.target_time.isoformat() if log.target_time else None,
+                log.client_time.isoformat() if log.client_time else None,
                 log.server_time.isoformat(),
-                log.event_name,
-                json.dumps(log.data),
-                log.source
+                log.source,
+                log.target,
+                log.event,
+                json.dumps(log.data)
             )
-        )
-
+        )           
         self.connection.commit()
         log.id = cursor.lastrowid
         return log

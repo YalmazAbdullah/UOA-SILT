@@ -29,16 +29,10 @@ data            | additional data
 ### Schemas
 These help enforce strcuture on, and validate recived data.
 
-**CreateSessionRequest:**
-Information sent by the client/target to create a new session. This first HTTPS request also serves as an intial handshake between server and client
+**SessionRequest:**
+Information sent by the client/target to create or update a session.
 ```
 subject_id  | Used to identify the subject/user
-```
-
-**UpdateSessionRequest:**
-Information sent by the monitor in order to update status of a particular session
-```
-session_id 
 ```
 
 **SessionsResponse:**

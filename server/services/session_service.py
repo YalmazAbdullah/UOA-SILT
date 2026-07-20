@@ -55,9 +55,9 @@ class SessionService:
         return session
 
     def get_session(self):
-        new_sessions = self.database.get_new_sessions()
-        return new_sessions
+        session = self.database.get_session()
+        return session
     
-    def get_new_sessions(self):
-        new_sessions = self.database.get_new_sessions()
+    def get_incomplete_sessions(self):
+        new_sessions = self.database.get_incomplete_sessions()
         return new_sessions

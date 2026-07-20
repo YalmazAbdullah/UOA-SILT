@@ -15,7 +15,7 @@ class DatabaseService(ABC):
         pass
 
     @abstractmethod
-    def get_new_sessions(self):
+    def get_incomplete_sessions(self):
         pass
 
     @abstractmethod
@@ -23,7 +23,7 @@ class DatabaseService(ABC):
         pass
 
     @abstractmethod
-    def add_log(self, log:Log):
+    def enter_log(self, log:Log):
         pass
 
     # @abstractmethod
