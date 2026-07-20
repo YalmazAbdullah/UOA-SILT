@@ -1,6 +1,6 @@
+import os
 import json
 import sqlite3
-
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -9,6 +9,7 @@ from abs_database_service import DatabaseService
 from server.models.enums import SessionState
 from server.models.log import Log
 from server.models.session import Session
+from server.schemas.session import SessionsResponse
 
 class SQLiteDatabase(DatabaseService):
 
@@ -20,82 +21,97 @@ class SQLiteDatabase(DatabaseService):
     def initialize(self):
         self.connection.executescript("""
         CREATE TABLE IF NOT EXISTS sessions (
-            id TEXT PRIMARY KEY,
+            session_id TEXT PRIMARY KEY,
             subject_id TEXT NOT NULL,
+            session_state TEXT NOT NULL,
             created_at TEXT NOT NULL,
             started_at TEXT,
-            ended_at TEXT,
-            state TEXT NOT NULL,
-            recording_directory TEXT
+            ended_at TEXT
         );
 
         CREATE TABLE IF NOT EXISTS logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            log_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
-            client_time REAL NOT NULL,
+            target_time TEXT,
+            client_time TEXT,
             server_time TEXT NOT NULL,
+            source TEXT NOT NULL,
+            target TEXT,
             event_name TEXT NOT NULL,
-            data TEXT NOT NULL,
-            source TEXT NOT NULL
+            data TEXT
         );
         """)
         self.connection.commit()
 
-    def save_session(self, session: Session):
+    def create_session(self, session: Session):
         self.connection.execute(
             """
             INSERT INTO sessions
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
-                str(session.id),
+                str(session.session_id),
                 session.subject_id,
+                session.session_state.value,
                 session.created_at.isoformat(),
                 session.started_at.isoformat() if session.started_at else None,
                 session.ended_at.isoformat() if session.ended_at else None,
-                session.state.value,
-                str(session.recording_directory)
             )
         )
         self.connection.commit()
 
+    def get_session(self, session_id: UUID):
+        cursor = self.connection.execute(
+            "SELECT * FROM sessions WHERE session_id=?",
+            (str(session_id),)
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return SessionsResponse(
+            session_id=UUID(row["session_id"]),
+            subject_id=row["subject_id"],
+            session_state=SessionState(row["state"]),
+            created_at=datetime.fromisoformat(row["created_at"]),
+        )
+    
+    def get_new_sessions(self):
+        cursor = self.connection.execute(
+            "SELECT * FROM sessions WHERE session_state = ?",
+            (SessionState.CREATED.value,)
+        )
+        rows = cursor.fetchall()
+        if rows is None:
+            return None
+        sessions = []
+        for row in rows:
+            sessions.append(
+                SessionsResponse(
+                    session_id=UUID(row["session_id"]),
+                    subject_id=row["subject_id"],
+                    session_state=SessionState(row["session_state"]),
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                )
+            )
+        return sessions
+    
     def update_session(self, session: Session):
         self.connection.execute(
             """
             UPDATE sessions
-            SET started_at=?, ended_at=?, state=?
-            WHERE id=?
+            SET session_state = ?, started_at = ?, ended_at = ?
+            WHERE session_id = ?
             """,
             (
+                session.session_state.value,
                 session.started_at.isoformat() if session.started_at else None,
                 session.ended_at.isoformat() if session.ended_at else None,
-                session.state.value,
-                str(session.id)
+                str(session.session_id)
             )
         )
         self.connection.commit()
 
-    # def get_session(self, session_id: UUID):
-    #     cursor = self.connection.execute(
-    #         "SELECT * FROM sessions WHERE id=?",
-    #         (str(session_id),)
-    #     )
-
-    #     row = cursor.fetchone()
-    #     if row is None:
-    #         return None
-
-    #     return Session(
-    #         id=UUID(row["id"]),
-    #         subject_id=row["subject_id"],
-    #         created_at=datetime.fromisoformat(row["created_at"]),
-    #         started_at=datetime.fromisoformat(row["started_at"]) if row["started_at"] else None,
-    #         ended_at=datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None,
-    #         state=SessionState(row["state"]),
-    #         recording_directory=Path(row["recording_directory"])
-    #     )
-
-    def save_log(self, log: LogEntry):
+    def enter_log(self, log: Log):
         cursor = self.connection.execute(
             """
             INSERT INTO logs
@@ -115,29 +131,3 @@ class SQLiteDatabase(DatabaseService):
         self.connection.commit()
         log.id = cursor.lastrowid
         return log
-
-    # def get_logs(self, session_id: UUID, limit: int = 100):
-    #     cursor = self.connection.execute(
-    #         """
-    #         SELECT * FROM logs
-    #         WHERE session_id=?
-    #         ORDER BY id DESC
-    #         LIMIT ?
-    #         """,
-    #         (str(session_id), limit)
-    #     )
-
-    #     rows = cursor.fetchall()
-
-    #     return [
-    #         LogEntry(
-    #             id=row["id"],
-    #             session_id=UUID(row["session_id"]),
-    #             client_time=row["client_time"],
-    #             server_time=datetime.fromisoformat(row["server_time"]),
-    #             event_name=row["event_name"],
-    #             data=json.loads(row["data"]),
-    #             source=row["source"]
-    #         )
-    #         for row in rows
-    #     ]

@@ -1,0 +1,3 @@
+STUDY_NAME = "Test"
+DATABASE_NAME = "Test"
+DATABASE_PATH = "./data/"

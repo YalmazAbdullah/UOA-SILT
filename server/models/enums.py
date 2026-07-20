@@ -3,7 +3,7 @@ from enum import Enum
 
 class SessionState(str, Enum):
     CREATED = "created"
-    RECORDING = "recording"
+    STARTED = "started"
     ENDED = "ended"
 
 

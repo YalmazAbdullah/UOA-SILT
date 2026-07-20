@@ -1,0 +1,187 @@
+### Models
+This section documents the models used for the toolkit. These are basically how the tables are structured in the database. The model classes allow for easier/consistent reading and writing.
+
+
+**Session:**
+Represents a single session of data collection
+```
+session_id (k)  | primary key for this table
+subject_id      | identifier for the subject/user
+session_state   | one of created, started, completed
+created_time    | time the session was created
+start_time      | time the session was started
+end_time        | time the session was ended
+```
+**Log:**
+Represents a single log entery
+```
+log_id (k)      | primary key for this table
+session_id (fk) | forign key used to tie log entery to session
+target_time     | time when request was made by target
+client_time     | time when request was made by client
+server_time     | time when recived by server
+source          | can be Target or Client to disambiguate log source
+target          | tag to identify target interface
+event           | name of the event being logged
+data            | additional data
+```
+
+### Schemas
+These help enforce strcuture on, and validate recived data.
+
+**CreateSessionRequest:**
+Information sent by the client/target to create a new session. This first HTTPS request also serves as an intial handshake between server and client
+```
+subject_id  | Used to identify the subject/user
+```
+
+**UpdateSessionRequest:**
+Information sent by the monitor in order to update status of a particular session
+```
+session_id 
+```
+
+**SessionsResponse:**
+Information sent by monitor in order to end logging on a particular session
+```
+subject_id
+session_id
+session_state
+created_at
+```
+
+**EnterLogRequest:**
+Log data sent by the client/target to be written to database
+```
+session_id
+log_id 
+target_time 
+client_time
+server_time 
+source
+target
+event 
+data 
+```
+
+**GetLogResponse:**
+Log data sent from server to the monitor for display
+```
+log_id 
+target_time 
+client_time
+server_time 
+source
+target
+event 
+data 
+```
+### API
+|Endpoint|Name|Details|
+|--------|----|-------|
+|`POST`| create_session|creates a new session entery and returns a session id|
+|`PUT` |start_session|changes session status to `started`|
+|`PUT` |end_session|changes session status to `ended`|
+|`GET` |get_session|gets session info tied to the provided `session_id`|
+|`GET` |get_new_sessions|gets all sessions that have not `started`|
+|`POST`|enter_log|writes log data to database|
+
+### Services
+|Service|Details|
+|-------|-------|
+|`session_service`| This service handles the buisness logic of validation, creating a session, updating it, and fetching it.|
+|`logging_service`| This service handles the buisness logic of validation, creating a log entery and fetching it.|
+|`abs_database_service`|Abstract class serving as a contract for the database backend. We provide an SQLite implementation out of the box. If you would like to use a different backend such as postgress, please implement this class and swap the calls in `server/api/dependencies.py`.|
+|`sqlite_service`|SQLite implementation of `abs_database_service`. This is where the actual SQL calls live as well for reference.|
+
+---
+# Scratch Work
+
+API
+
+Client Facing
+create_session POST -> session_id
+enter_log POST
+
+MONITOR FACING
+get_all_sessions GET
+start_session PUT -> updated active session list
+end_session PUT  -> updated active session list
+get_log GET (websocket)
+
+
+DB models
+
+Session
++session_id (k)
+-subject_id
++created_time
++start_time
++end_time
+
+Log
++log_id
+=session_id (fk)
+-target_time
+-client_time
++server_time
+-source [target, client]
+-target
+-event
+-data
+
+API Schemas
+create_session
+- Recives: 
+    Create Session Request
+        . subject_id
+- Send:
+    . session_id 
+
+enter_log
+- Recives:
+    Enter Log Request
+        . session_id
+        . target_time
+        . client_time
+        . source
+        . target
+        . event
+        . data
+- Send:
+    Nothing.
+
+get_all_sessions
+- Recives:
+    Nothing
+- Send:
+    Get Sessions Response
+        . session_id
+        . session_status
+
+start_session
+- Recives:
+    Start Session Request
+        . session_id
+- Send:
+    Nothing
+
+end_session:
+- Recives:
+    End Session Request
+        . session_id
+- Send:
+    Nothing
+
+get_session_log
+- session_id
+- Send:
+    Session Log Response
+        . log_id
+        . target_time
+        . client_time
+        . server_time
+        . source [target, client]
+        . target
+        . event
+        . data
