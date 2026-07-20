@@ -1,0 +1,16 @@
+This client serves as an intermediary between the server and target.
+Its main purpose is to handle client side state logic, OS level logging and forward requests from the target to the server
+
+Client Setup
+- Create Session
+- Send Hello message to server
+
+Create dummy client in Python, C#, Javascript
+- sends a hello world log over UDP websocket
+
+Client
+- recive UPD messages 
+- Forward the messages to the server
+- Capture Mouse movement
+- Capture Keyboard movement
+
