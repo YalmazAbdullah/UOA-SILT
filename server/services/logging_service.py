@@ -14,7 +14,7 @@ class LoggingService:
             session_id=session_id,
             target_time=request.target_time,
             client_time=request.client_time,
-            server_time=datetime.now(timezone.utc),
+            server_time=datetime.now(timezone.utc).isoformat(),
             source=request.source,
             target=request.target,
             event=request.event,

@@ -35,9 +35,9 @@ class SessionService:
         # Handle potential errors
         if session is None:
             raise SessionNotFound()
-        if session.state != SessionState.CREATED:
+        if session.session_state != SessionState.CREATED:
             raise InvalidSessionState
-        session.state = SessionState.STARTED
+        session.session_state = SessionState.STARTED
         session.started_at = datetime.now(timezone.utc)
         self.database.update_session(session)
         return session
@@ -47,9 +47,9 @@ class SessionService:
         # Handle potential errors
         if session is None:
             raise SessionNotFound()
-        if session.state != SessionState.STARTED:
+        if session.session_state != SessionState.STARTED:
             raise InvalidSessionState
-        session.state = SessionState.ENDED
+        session.session_state = SessionState.ENDED
         session.ended_at = datetime.now(timezone.utc)
         self.database.update_session(session)
         return session

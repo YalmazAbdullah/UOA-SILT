@@ -19,7 +19,7 @@ class DatabaseService(ABC):
         pass
 
     @abstractmethod
-    def update_sesion(self, session: Session):
+    def update_session(self, session: Session):
         pass
 
     @abstractmethod

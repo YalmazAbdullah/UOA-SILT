@@ -1,7 +1,7 @@
 import os
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime,timezone
 from pathlib import Path
 from uuid import UUID
 
@@ -71,8 +71,10 @@ class SQLiteDatabase(DatabaseService):
         return SessionResponse(
             session_id=UUID(row["session_id"]),
             subject_id=row["subject_id"],
-            session_state=SessionState(row["state"]),
+            session_state=SessionState(row["session_state"]),
             created_at=datetime.fromisoformat(row["created_at"]),
+            started_at=datetime.fromisoformat(row["started_at"]) if row["started_at"]!=None else None,
+            ended_at=datetime.fromisoformat(row["started_at"]) if row["started_at"]!=None else None
         )
     
     def get_incomplete_sessions(self):
@@ -95,17 +97,16 @@ class SQLiteDatabase(DatabaseService):
             )
         return sessions
     
-    def update_sesion(self, session: Session):
+    def update_session(self, session: SessionResponse):
         self.connection.execute(
             """
             UPDATE sessions
-            SET session_state = ?, started_at = ?, ended_at = ?
+            SET session_state = ?, started_at = ?
             WHERE session_id = ?
             """,
             (
                 session.session_state.value,
-                session.started_at.isoformat() if session.started_at else None,
-                session.ended_at.isoformat() if session.ended_at else None,
+                datetime.now(timezone.utc).isoformat(),
                 str(session.session_id)
             )
         )
