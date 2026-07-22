@@ -9,7 +9,7 @@ Create dummy client in Python, C#, Javascript
 - sends a hello world log over UDP websocket
 
 Client
-- recive UPD messages 
+- Receive UPD messages 
 - Forward the messages to the server
 - Capture Mouse movement
 - Capture Keyboard movement
