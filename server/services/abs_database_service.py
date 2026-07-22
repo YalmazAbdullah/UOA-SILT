@@ -15,11 +15,11 @@ class DatabaseService(ABC):
         pass
 
     @abstractmethod
-    def get_incomplete_sessions(self):
+    def get_sessions(self):
         pass
 
     @abstractmethod
-    def update_session(self, session: Session):
+    def update_session(self, session_id:str, session_state:str):
         pass
 
     @abstractmethod

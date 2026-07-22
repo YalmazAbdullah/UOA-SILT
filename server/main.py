@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from server.api.routes import sessions, logs
+from server.api.routes import log, session
+
 
 app = FastAPI(title="Research Logger")
 
-app.include_router(sessions.router)
-app.include_router(logs.router)
+app.include_router(session.router)
+app.include_router(log.router)
 
 @app.get("/")
 def root():

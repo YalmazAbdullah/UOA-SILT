@@ -3,11 +3,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+
 class CreateSessionRequest(BaseModel):
     subject_id: str
-
-class SessionRequest(BaseModel):
-    session_id: str
 
 class SessionResponse(BaseModel):
     session_id: UUID

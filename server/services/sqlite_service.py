@@ -6,10 +6,9 @@ from pathlib import Path
 from uuid import UUID
 
 from server.services.abs_database_service import DatabaseService
-from server.models.enums import SessionState
 from server.models.log import Log
 from server.models.session import Session
-from server.schemas.session import SessionResponse
+
 
 class SQLiteDatabase(DatabaseService):
 
@@ -44,73 +43,98 @@ class SQLiteDatabase(DatabaseService):
         self.connection.commit()
 
     def create_session(self, session: Session):
-        self.connection.execute(
-            """
-            INSERT INTO sessions
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                str(session.session_id),
-                session.subject_id,
-                session.session_state.value,
-                session.created_at.isoformat(),
-                session.started_at.isoformat() if session.started_at else None,
-                session.ended_at.isoformat() if session.ended_at else None,
-            )
-        )
-        self.connection.commit()
-
-    def get_session(self, session_id: UUID):
-        cursor = self.connection.execute(
-            "SELECT * FROM sessions WHERE session_id=?",
-            (str(session_id),)
-        )
-        row = cursor.fetchone()
-        if row is None:
-            return None
-        return SessionResponse(
-            session_id=UUID(row["session_id"]),
-            subject_id=row["subject_id"],
-            session_state=SessionState(row["session_state"]),
-            created_at=datetime.fromisoformat(row["created_at"]),
-            started_at=datetime.fromisoformat(row["started_at"]) if row["started_at"]!=None else None,
-            ended_at=datetime.fromisoformat(row["started_at"]) if row["started_at"]!=None else None
-        )
-    
-    def get_incomplete_sessions(self):
-        cursor = self.connection.execute(
-            "SELECT * FROM sessions WHERE session_state = ?",
-            (SessionState.CREATED.value,)
-        )
-        rows = cursor.fetchall()
-        if rows is None:
-            return None
-        sessions = []
-        for row in rows:
-            sessions.append(
-                SessionResponse(
-                    session_id=UUID(row["session_id"]),
-                    subject_id=row["subject_id"],
-                    session_state=SessionState(row["session_state"]),
-                    created_at=datetime.fromisoformat(row["created_at"]),
+        try:
+            self.connection.execute(
+                """
+                INSERT INTO sessions
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(session.session_id),
+                    session.subject_id,
+                    session.session_state.value,
+                    session.created_at.isoformat(),
+                    session.started_at.isoformat() if session.started_at else None,
+                    session.ended_at.isoformat() if session.ended_at else None,
                 )
             )
-        return sessions
-    
-    def update_session(self, session: SessionResponse):
-        self.connection.execute(
-            """
-            UPDATE sessions
-            SET session_state = ?, started_at = ?
-            WHERE session_id = ?
-            """,
-            (
-                session.session_state.value,
-                datetime.now(timezone.utc).isoformat(),
-                str(session.session_id)
+            self.connection.commit()
+            return True
+        
+        except sqlite3.Error as e:
+            self.connection.rollback()
+            return False 
+
+    def get_session(self, session_id: UUID):
+        try:
+            cursor = self.connection.execute(
+                "SELECT * FROM sessions WHERE session_id=?",
+                (str(session_id),)
             )
+            row = cursor.fetchone()
+            return row 
+        
+        except sqlite3.Error as e:
+            self.connection.rollback()
+            return
+        
+    def get_sessions(self):
+        cursor = self.connection.execute(
+            "SELECT * FROM sessions"
         )
-        self.connection.commit()
+        rows = cursor.fetchall()
+        return rows
+
+    def update_session(self, session_id:str, session_state:str):
+        try:
+            self.connection.execute(
+                """
+                UPDATE sessions
+                SET session_state = ?, started_at = ?
+                WHERE session_id = ?
+                """,
+                (
+                    session_state,
+                    datetime.now(timezone.utc).isoformat(),
+                    session_id
+                )
+            )
+            self.connection.commit()
+            return True
+        
+        except sqlite3.Error as e:
+            self.connection.rollback()
+            return False 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
 
     def enter_log(self, log: Log):
         cursor = self.connection.execute(
