@@ -9,3 +9,6 @@ class InvalidSessionState(Exception):
 
 class SessionUpdatingFailed(Exception):
     pass
+
+class LogWriteFailed(Exception):
+    pass

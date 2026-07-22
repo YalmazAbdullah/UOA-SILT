@@ -37,37 +37,6 @@ Information sent by the client/target to create or update a session.
 subject_id  | Used to identify the subject/user
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 **SessionsResponse:**
 Information sent by monitor in order to end logging on a particular session
 ```

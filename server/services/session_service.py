@@ -21,7 +21,7 @@ class SessionService:
     def __init__(self, database) -> None:
         self.database = database
 
-    def create_session(self, subject_id):
+    def create_session(self, subject_id:str):
         session_id = uuid4()
         # Convert request schema to model before writing to database
         session = Session(
@@ -37,7 +37,7 @@ class SessionService:
             raise exceptions.SessionCreationFailed
         return session 
 
-    def get_session(self, session_id):
+    def get_session(self, session_id:str):
         raw_data = self.database.get_session(session_id)
         if raw_data is None:
             raise exceptions.SessionNotFound
@@ -54,7 +54,7 @@ class SessionService:
             response.append(_raw_session_row_to_response(session))
         return response
 
-    def start_session(self, session_id):
+    def start_session(self, session_id:str):
         # Fetch session 
         session = self.get_session(session_id)
         if session.session_state != SessionState.CREATED:
@@ -67,7 +67,7 @@ class SessionService:
             raise exceptions.SessionUpdatingFailed
         return session 
     
-    def end_session(self, session_id):
+    def end_session(self, session_id:str):
         # Fetch session 
         session = self.get_session(session_id)
         if session.session_state != SessionState.STARTED:

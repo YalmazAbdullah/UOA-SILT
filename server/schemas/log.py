@@ -4,16 +4,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-
 class EnterLogRequest(BaseModel):
-    session_id: UUID 
     target_time: datetime | None
     client_time: datetime | None
     source: str
     target: str
     event: str
     data: dict[str, Any] = Field(default_factory=dict)
-
 
 class GetLogResponse(BaseModel):
     log_id: int

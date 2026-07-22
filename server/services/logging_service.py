@@ -3,12 +3,13 @@ from datetime import datetime,timezone
 
 from server.schemas.log import EnterLogRequest
 from server.models.log import Log
+import server.common.exceptions as exceptions
 
 class LoggingService:
     def __init__(self, database) -> None:
         self.database = database
-
-    def enter_log(self, session_id: UUID, request: EnterLogRequest):
+    # Convert request schema to model before writing to database
+    def enter_log(self, session_id: str, request: EnterLogRequest):
         entry = Log(
             log_id=None,
             session_id=session_id,
@@ -20,4 +21,6 @@ class LoggingService:
             event=request.event,
             data=request.data,
         )
-        self.database.enter_log(entry)
+        status = self.database.enter_log(entry)
+        if not status:
+            raise exceptions.LogWriteFailed

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status, HTTPException, status
 
 from server.api.dependencies import get_session_service
@@ -30,9 +32,9 @@ def get_sessions(
     sessions = service.get_sessions()
     return sessions
 
-@router.get("/{session_id}", response_model=SessionResponse)
+@router.get("/{session_id:uuid}", response_model=SessionResponse)
 def get_session(
-    session_id: str,
+    session_id: UUID,
     service: SessionService = Depends(get_session_service)
 ):
     try:
@@ -45,9 +47,9 @@ def get_session(
             detail=f"Session with ID {session_id} does not exist."
         )
 
-@router.put("/start/{session_id}")
+@router.put("/start/{session_id:uuid}")
 def start_session(
-    session_id: str,
+    session_id: UUID,
     service: SessionService = Depends(get_session_service)
 ):
     try:
@@ -72,9 +74,9 @@ def start_session(
             detail="Session was not updated due to databse error."
         )
     
-@router.put("/end/{session_id}")
+@router.put("/end/{session_id:uuid}")
 def end_session(
-    session_id: str,
+    session_id: UUID,
     service: SessionService = Depends(get_session_service)
 ):
     try:

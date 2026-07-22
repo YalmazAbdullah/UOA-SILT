@@ -1,3 +1,5 @@
+from datetime import datetime,timezone
+
 import pytest
 from fastapi.testclient import TestClient
 from server.main import app
@@ -63,21 +65,36 @@ def test_end_session_F2():
     response = client.put("/sessions/start/failed_respose")
     assert response.status_code == 404
 
+def test_enter_log():
+    test_data = {
+        "target_time": None,
+        "client_time": datetime.now(timezone.utc).isoformat(),
+        "source": "client",
+        "target": "pytest",
+        "event": "success_test",
+        "data": {'message':"this is a test"}
+    }
+    response = client.post(f"/logs/{g_session_id}", json=test_data)
+    assert response.status_code == 201
 
+def test_enter_logF():
+    test_data = {
+        "client_time": datetime.now(timezone.utc).isoformat(),
+        "source": "client",
+        "event": "fail_test",
+        "data": {'message':"this is a test"}
+    }
+    response = client.post(f"/logs/{g_session_id}", json=test_data)
+    assert response.status_code == 422
 
-
-
-
-
-   
-
-
-
-# # End Session
-# def test_end_session():
-#     response = client.post("/sessions", json={"subject_id": "test_subject"})
-#     data = response.json()
-#     session_id = data["session_id"]
-#     response = client.put(f"/sessions/start", json={"session_id": session_id})
-#     response = client.put(f"/sessions/end", json={"session_id": session_id})
-#     assert response.status_code == 200
+def test_enter_logF2():
+    test_data = {
+        "target_time": None,
+        "client_time": datetime.now(timezone.utc).isoformat(),
+        "source": "client",
+        "target": "pytest",
+        "event": "fail_test",
+        "data": {'message':"this is a test"}
+    }
+    response = client.post(f"/logs/failed_respose", json=test_data)
+    assert response.status_code == 404

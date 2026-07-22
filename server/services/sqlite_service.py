@@ -106,54 +106,32 @@ class SQLiteDatabase(DatabaseService):
             self.connection.rollback()
             return False 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-
     def enter_log(self, log: Log):
-        cursor = self.connection.execute(
-            """
-            INSERT INTO logs
-            (session_id, target_time, client_time, server_time, source, target, event, data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                str(log.session_id),
-                log.target_time.isoformat() if log.target_time else None,
-                log.client_time.isoformat() if log.client_time else None,
-                log.server_time.isoformat(),
-                log.source,
-                log.target,
-                log.event,
-                json.dumps(log.data)
-            )
-        )           
-        self.connection.commit()
-        log.id = cursor.lastrowid
-        return log
+        try:
+            cursor = self.connection.execute(
+                """
+                INSERT INTO logs (
+                session_id, 
+                target_time, client_time, server_time, 
+                source, target, 
+                event, data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(log.session_id),
+                    log.target_time.isoformat() if log.target_time else None,
+                    log.client_time.isoformat() if log.client_time else None,
+                    log.server_time,
+                    log.source,
+                    log.target,
+                    log.event,
+                    json.dumps(log.data)
+                )
+            )           
+            self.connection.commit()
+            log.id = cursor.lastrowid
+            return log
+
+        except sqlite3.Error as e:
+            self.connection.rollback()
+            return False
