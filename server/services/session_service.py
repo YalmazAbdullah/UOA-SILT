@@ -19,7 +19,7 @@ def _raw_session_row_to_response(raw_data):
 
 class SessionService:
     def __init__(self, database) -> None:
-        self.database = database
+        self._database = database
 
     def create_session(self, subject_id:str):
         session_id = uuid4()
@@ -32,13 +32,13 @@ class SessionService:
             started_at=None,
             ended_at=None,
         )
-        status = self.database.create_session(session)
+        status = self._database.create_session(session)
         if not status:
             raise exceptions.SessionCreationFailed
         return session 
 
     def get_session(self, session_id:str):
-        raw_data = self.database.get_session(session_id)
+        raw_data = self._database.get_session(session_id)
         if raw_data is None:
             raise exceptions.SessionNotFound
         # Transform raw data into schema
@@ -46,7 +46,7 @@ class SessionService:
         return session
 
     def get_sessions(self):
-        raw_data = self.database.get_sessions()
+        raw_data = self._database.get_sessions()
         if raw_data is None:
             return []
         response = []
@@ -62,7 +62,7 @@ class SessionService:
         # Update the session to started
         session.session_state = SessionState.STARTED
         session.started_at = datetime.now(timezone.utc)
-        status = self.database.update_session(str(session.session_id), session.session_state.value)
+        status = self._database.update_session(str(session.session_id), session.session_state.value)
         if not status:
             raise exceptions.SessionUpdatingFailed
         return session 
@@ -75,7 +75,7 @@ class SessionService:
         # Update the session to ended
         session.session_state = SessionState.ENDED
         session.started_at = datetime.now(timezone.utc)
-        status = self.database.update_session(str(session.session_id), session.session_state.value)
+        status = self._database.update_session(str(session.session_id), session.session_state.value)
         if not status:
             raise exceptions.SessionUpdatingFailed
         return session 

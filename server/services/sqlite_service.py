@@ -13,12 +13,12 @@ from server.models.session import Session
 class SQLiteDatabase(DatabaseService):
 
     def __init__(self, path: Path):
-        self.connection = sqlite3.connect(path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row
+        self._connection = sqlite3.connect(path, check_same_thread=False)
+        self._connection.row_factory = sqlite3.Row
         self.initialize()
 
     def initialize(self):
-        self.connection.executescript("""
+        self._connection.executescript("""
         CREATE TABLE IF NOT EXISTS sessions (
             session_id TEXT PRIMARY KEY,
             subject_id TEXT NOT NULL,
@@ -40,11 +40,11 @@ class SQLiteDatabase(DatabaseService):
             data TEXT
         );
         """)
-        self.connection.commit()
+        self._connection.commit()
 
     def create_session(self, session: Session):
         try:
-            self.connection.execute(
+            self._connection.execute(
                 """
                 INSERT INTO sessions
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -58,16 +58,16 @@ class SQLiteDatabase(DatabaseService):
                     session.ended_at.isoformat() if session.ended_at else None,
                 )
             )
-            self.connection.commit()
+            self._connection.commit()
             return True
         
         except sqlite3.Error as e:
-            self.connection.rollback()
+            self._connection.rollback()
             return False 
 
     def get_session(self, session_id: UUID):
         try:
-            cursor = self.connection.execute(
+            cursor = self._connection.execute(
                 "SELECT * FROM sessions WHERE session_id=?",
                 (str(session_id),)
             )
@@ -75,11 +75,11 @@ class SQLiteDatabase(DatabaseService):
             return row 
         
         except sqlite3.Error as e:
-            self.connection.rollback()
+            self._connection.rollback()
             return
         
     def get_sessions(self):
-        cursor = self.connection.execute(
+        cursor = self._connection.execute(
             "SELECT * FROM sessions"
         )
         rows = cursor.fetchall()
@@ -87,7 +87,7 @@ class SQLiteDatabase(DatabaseService):
 
     def update_session(self, session_id:str, session_state:str):
         try:
-            self.connection.execute(
+            self._connection.execute(
                 """
                 UPDATE sessions
                 SET session_state = ?, started_at = ?
@@ -99,16 +99,16 @@ class SQLiteDatabase(DatabaseService):
                     session_id
                 )
             )
-            self.connection.commit()
+            self._connection.commit()
             return True
         
         except sqlite3.Error as e:
-            self.connection.rollback()
+            self._connection.rollback()
             return False 
 
     def enter_log(self, log: Log):
         try:
-            cursor = self.connection.execute(
+            cursor = self._connection.execute(
                 """
                 INSERT INTO logs (
                 session_id, 
@@ -128,10 +128,10 @@ class SQLiteDatabase(DatabaseService):
                     json.dumps(log.data)
                 )
             )           
-            self.connection.commit()
+            self._connection.commit()
             log.id = cursor.lastrowid
             return log
 
         except sqlite3.Error as e:
-            self.connection.rollback()
+            self._connection.rollback()
             return False
