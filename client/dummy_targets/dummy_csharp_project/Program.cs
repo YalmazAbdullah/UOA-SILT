@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace DummyTest {
     
@@ -11,6 +12,7 @@ namespace DummyTest {
         private const int _Port = 5000;
 
         private static void SendLog(string log) {
+            
             try {
                 
                 var payload = new {
@@ -26,9 +28,10 @@ namespace DummyTest {
                 string json = JsonSerializer.Serialize(payload);
                 byte[] data = Encoding.UTF8.GetBytes(json);
 
-                using var client = new UdpClient();
+                var client = new UdpClient();
                 client.Send(data, data.Length, _Host, _Port);
             }
+
             catch (Exception ex) {
                 Console.Error.WriteLine($"Failed to send UDP packet: {ex.Message}");
             }

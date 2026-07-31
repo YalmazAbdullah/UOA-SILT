@@ -1,4 +1,4 @@
-const datagram = require('dgram')
+import dgram from 'node:dgram';
 
 const HOST = '127.0.0.1'
 const PORT = 5000
@@ -6,7 +6,7 @@ const PORT = 5000
 function sendLog(log) {
     
     try {
-        const client = dgram.createSocket('UDP4');
+        const client = dgram.createSocket('udp4');
 
         const payload = {
             target_time: new Date().toISOString(),
