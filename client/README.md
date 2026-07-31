@@ -14,3 +14,24 @@ Client
 - Capture Mouse movement
 - Capture Keyboard movement
 
+
+========================================
+
+Here is short documentation to what I did 
+
+## Dummy Targets
+
+HOST = "127.0.0.1"
+PORT = 5000 
+
+In Python, C#, and Javascript will send a UDP packet. 
+
+## Target_Listener 
+
+TARGET_HOST = "127.0.0.1"
+TARGET_PORT = 5000
+
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 8000 
+
+Will first connect to a target socket and listen in, then when data comes in- will grab it and add the client_time and try to send it to the server. 
