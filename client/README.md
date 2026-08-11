@@ -37,3 +37,9 @@ Will first connect to a target socket and listen in, then when data comes in- wi
 
 1. run ```uvicorn server.main:app --host 127.0.0.1 --port 8000``` from root
 2. run ```python gui``` from /client
+3. Starts session, pauses, resumes, and stops 
+
+
+## Features yet to be implemented
+
+1. Custom keybinding that stops the session
