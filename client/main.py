@@ -79,8 +79,6 @@ def main():
     recorder = os_input_listener.InputRecording(on_event=forward_os_event)
     recorder.start()
 
-    print("started recording")
-
     try: 
         while is_recording: 
 

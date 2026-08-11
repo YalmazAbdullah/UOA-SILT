@@ -58,7 +58,7 @@ class InputRecording:
         self.send_event({
             "client_time": get_client_time(),
             "source": "client",
-            "event": f"mouse_click",
+            "event": f"mouse_click_{mouse_button.name}",
             "data": {
                 "x-pos:": x,
                 "y-pos:": y,
@@ -78,7 +78,7 @@ class InputRecording:
             "source": "client",
             "event": f"keyboard_press_{key_name}",
             "data": {
-                "key": key_name
+                "key": key_name,
             }
         })
 
@@ -96,21 +96,12 @@ class InputRecording:
             "source": "client",
             "event": f"keyboard_release_{key_name}",
             "data": {
-                "key": key_name
+                "key": key_name,
             }
         })
 
 def get_client_time():
     return datetime.now(timezone.utc).isoformat()
-
-def repackage_payload(payload):
-
-    return {
-        "client_time": get_client_time(),
-        "source": "client",
-        "event": payload.get("event"),
-        "data": payload.get("data")
-    }
 
 def main(): 
 
@@ -130,7 +121,6 @@ def main():
         recorder.stop()
 
     print("End.") 
-
 
 if __name__ == "__main__":
     main() 

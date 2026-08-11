@@ -2,7 +2,7 @@ This client serves as an intermediary between the server and target.
 Its main purpose is to handle client side state logic, OS level logging and forward requests from the target to the server
 
 Client Setup
-- Create Session
+- Create Session 
 - Send Hello message to server
 
 Create dummy client in Python, C#, Javascript
@@ -14,10 +14,7 @@ Client
 - Capture Mouse movement
 - Capture Keyboard movement
 
-
 ========================================
-
-Here is short documentation to what I did 
 
 ## Dummy Targets
 
@@ -35,3 +32,8 @@ SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000 
 
 Will first connect to a target socket and listen in, then when data comes in- will grab it and add the client_time and try to send it to the server. 
+
+## GUI
+
+1. run ```uvicorn server.main:app --host 127.0.0.1 --port 8000``` from root
+2. run ```python gui``` from /client
