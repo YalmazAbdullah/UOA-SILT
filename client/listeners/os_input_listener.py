@@ -12,8 +12,10 @@ SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000 
 
 class InputRecording:
-    def __init__(self, on_event = None) -> None:
+    def __init__(self, on_event = None, stop_key = None, on_stop = None) -> None:
         self._on_event = on_event
+        self._stop_key = stop_key
+        self._on_stop = on_stop
         self._enabled = threading.Event()
         self._enabled.set()
 
@@ -72,6 +74,11 @@ class InputRecording:
             key_name = key.char
         except AttributeError:
             key_name = str(key).split(".")[-1]
+
+        if self._stop_key and key_name.lower() == self._stop_key.lower():
+            if self._on_stop:
+                threading.Thread(target=self._on_stop, daemon=True).start()
+            return
 
         self.send_event({
             "client_time": get_client_time(),
