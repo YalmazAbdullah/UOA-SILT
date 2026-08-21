@@ -2,15 +2,44 @@ This client serves as an intermediary between the server and target.
 Its main purpose is to handle client side state logic, OS level logging and forward requests from the target to the server
 
 Client Setup
-- Create Session
+- Create Session 
 - Send Hello message to server
 
 Create dummy client in Python, C#, Javascript
 - sends a hello world log over UDP websocket
 
 Client
-- recive UPD messages 
+- Receive UPD messages 
 - Forward the messages to the server
 - Capture Mouse movement
 - Capture Keyboard movement
 
+========================================
+
+## Dummy Targets
+
+HOST = "127.0.0.1"
+PORT = 5000 
+
+In Python, C#, and Javascript will send a UDP packet. 
+
+## Target_Listener 
+
+TARGET_HOST = "127.0.0.1"
+TARGET_PORT = 5000
+
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 8000 
+
+Will first connect to a target socket and listen in, then when data comes in- will grab it and add the client_time and try to send it to the server. 
+
+## GUI
+
+1. run ```uvicorn server.main:app --host 127.0.0.1 --port 8000``` from root
+2. run ```python gui``` from /client
+3. Starts session, pauses, resumes, and stops 
+
+
+## Features yet to be implemented
+
+1. Custom keybinding that stops the session

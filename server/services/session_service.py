@@ -13,7 +13,7 @@ def _raw_session_row_to_response(raw_data):
         session_state=SessionState(raw_data["session_state"]),
         created_at=datetime.fromisoformat(raw_data["created_at"]),
         started_at=datetime.fromisoformat(raw_data["started_at"]) if raw_data["started_at"]!=None else None,
-        ended_at=datetime.fromisoformat(raw_data["started_at"]) if raw_data["started_at"]!=None else None
+        ended_at=datetime.fromisoformat(raw_data["ended_at"]) if raw_data["ended_at"]!=None else None
     )
     return response
 
@@ -74,7 +74,7 @@ class SessionService:
             raise exceptions.InvalidSessionState
         # Update the session to ended
         session.session_state = SessionState.ENDED
-        session.started_at = datetime.now(timezone.utc)
+        session.ended_at = datetime.now(timezone.utc)
         status = self.database.update_session(str(session.session_id), session.session_state.value)
         if not status:
             raise exceptions.SessionUpdatingFailed
