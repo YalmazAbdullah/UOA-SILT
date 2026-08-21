@@ -11,15 +11,22 @@ TARGET_PORT = 5000
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000 
 
+RATE_OF_COLLECTION_SECONDS = 10.0
+
 class InputRecording:
-    def __init__(self, on_event = None, stop_key = None, on_stop = None) -> None:
+    def __init__(self, on_event = None, stop_key = None, on_stop = None):
+        
         self._on_event = on_event
+
         self._stop_key = stop_key
         self._on_stop = on_stop
+
         self._enabled = threading.Event()
         self._enabled.set()
 
-        self.mouse_listener = mouse.Listener(on_click=self.on_click)
+        self.last_mouse_send = 0
+        self.mouse_listener = mouse.Listener(on_click=self.on_click, on_move=self.on_move_mouse)
+
         self.keyboard_listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
 
     def enable(self):
@@ -67,6 +74,25 @@ class InputRecording:
                 "mouse_button": mouse_button.name,
             }
         })
+    
+    def on_move_mouse(self, x, y):
+
+        current_time = time.monotonic()
+
+        if current_time - self.last_mouse_send < RATE_OF_COLLECTION_SECONDS:
+            return 
+
+        self.last_mouse_send = current_time
+
+        self.send_event({
+            "client_time": get_client_time(),
+            "source": "client",
+            "event": "mouse_move",
+            "data": {
+                "x-pos:": x,
+                "y-pos:": y,
+            }
+        })
 
     def on_press(self, key):
 
@@ -109,25 +135,3 @@ class InputRecording:
 
 def get_client_time():
     return datetime.now(timezone.utc).isoformat()
-
-def main(): 
-
-    def on_event(event):
-        print(f"Event received: {event}")
-
-    recorder = InputRecording(on_event=on_event)
-    recorder.start()
-    print("Started.")
-
-    try:
-        while recorder.keyboard_listener.running and recorder.mouse_listener.running:
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        print("Stop it.")
-    finally:
-        recorder.stop()
-
-    print("End.") 
-
-if __name__ == "__main__":
-    main() 

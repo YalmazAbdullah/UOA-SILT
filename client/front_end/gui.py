@@ -55,10 +55,10 @@ def api_enter_log(session_id, payload):
     body = {
         "target_time": payload.get("target_time"),
         "client_time": payload.get("client_time", now),
-        "source":      payload.get("source", "client"),
-        "target":      payload.get("target", "Unknown Target"),
-        "event":       payload.get("event", "Unknown Event"),
-        "data":        payload.get("data", {}),
+        "source": payload.get("source", "client"),
+        "target": payload.get("target", "Unknown Target"),
+        "event": payload.get("event", "Unknown Event"),
+        "data": payload.get("data", {}),
     }
     request = requests.post(f"{API}/logs/{session_id}", json=body, timeout=5)
     request.raise_for_status()
@@ -175,12 +175,11 @@ def on_stop():
 
 def on_set_stop_key():
 
-    State.listening_for_key = True
-    dpg.configure_item("btn_set_stop_key", label="[ press a key ]", enabled=False)
-
     def capture(key):
+
         try:
             key_name = key.char
+
         except AttributeError:
             key_name = str(key).split(".")[-1]
 
@@ -189,6 +188,9 @@ def on_set_stop_key():
         dpg.configure_item("btn_set_stop_key", label=key_name, enabled=True)
 
         return False 
+
+    State.listening_for_key = True
+    dpg.configure_item("btn_set_stop_key", label="[ press a key ]", enabled=False)
 
     keyboard.Listener(on_press=capture).start()
 

@@ -1,7 +1,6 @@
 import socket
 import json
 import struct
-from datetime import datetime, timezone
 
 from listeners import os_input_listener, target_listener
 
@@ -11,9 +10,6 @@ TARGET_PORT = 5000
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000 
 
-#MAX_PACKET_SIZE = 65535
-
-## TEMPORARY VARIABLE 
 is_recording = True
 
 def server_connect(host, port):
