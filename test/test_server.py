@@ -1,6 +1,5 @@
 from datetime import datetime,timezone
 
-import pytest
 from fastapi.testclient import TestClient
 from server.main import app
 
@@ -98,3 +97,60 @@ def test_enter_logF2():
     }
     response = client.post(f"/logs/failed_respose", json=test_data)
     assert response.status_code == 404
+
+# Subscribe to websocket
+def test_websocket_connect():
+    with client.websocket_connect(
+        f"/logs/{g_session_id}/ws"
+    ) as websocket:
+        assert websocket is not None
+
+# Recive log
+def test_websocket_receive():
+    with client.websocket_connect(
+        f"/logs/{g_session_id}/ws"
+    ) as websocket:
+        # Post log entery
+        test_data = {
+            "target_time": None,
+            "client_time": datetime.now(timezone.utc).isoformat(),
+            "source": "client",
+            "target": "pytest",
+            "event": "socket_test",
+            "data": {"message": "hello websocket"}
+        }
+        response = client.post(
+            f"/logs/{g_session_id}",
+            json=test_data
+        )
+        assert response.status_code == 201
+        # Recive on subscriber
+        message = websocket.receive_json()
+        assert message["event"] == "socket_test"
+        assert message["data"]["message"] == "hello websocket"
+
+def test_websocket_multi_recive():
+    with client.websocket_connect(
+        f"/logs/{g_session_id}/ws"
+    ) as websocket:
+        # Post log entery
+        for i in range(5):
+            response = client.post(
+                f"/logs/{g_session_id}",
+                json={
+                    "target_time": None,
+                    "client_time": datetime.now(timezone.utc).isoformat(),
+                    "source": "client",
+                    "target": "pytest",
+                    "event": f"log_{i}",
+                    "data": {
+                        "value": i
+                    }
+                }
+            )
+            assert response.status_code == 201
+        # Recive on subscriber
+        for i in range(5):
+            message = websocket.receive_json()
+            assert message["event"] == f"log_{i}"
+            assert message["data"]["value"] == i
