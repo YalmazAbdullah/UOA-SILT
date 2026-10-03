@@ -1,3 +1,10 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+pyenv/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
