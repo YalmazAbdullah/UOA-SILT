@@ -9,76 +9,71 @@ TARGET_PORT = 5000
 
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000 
+SOCKET_TIMEOUT = 0.5
 
-is_recording = True
 
-def server_connect(host, port):
+def receive_packets(target_sock):
 
     try:
+        return target_listener.listen(target_sock)
+    
+    except socket.timeout:
+        return None, None
 
-        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+def server_connect(host, port):
+
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    try:
         server_sock.connect((host, port))
 
         print(f"[SERVER] Connection successful: {host}:{port}")
-
         return server_sock
 
     except ConnectionRefusedError:
-
         print(f"[SERVER] Connection refused: {host}:{port}")
         print("[SERVER] Data will NOT be forwarded.")
-
+        
         return None
 
     except OSError as e:
+        server_sock.close()
 
         print(f"[SERVER] Connection failed: {host}:{port} ==> {e}")
         print("[SERVER] Data will NOT be forwarded.")
-
         return None
 
 
 def server_send(sock, payload):
-   
-    try:
+    if sock is None:
+        return False
 
+    try:
         data = json.dumps(payload).encode("UTF-8")
         header = struct.pack(">I", len(data))
-
         sock.sendall(header + data)
-
         return True
 
-    except (ConnectionResetError, OSError) as e:
+    except OSError as e:
+        print(f"[SERVER] Data failed to send because of an OSerror: {e}")
+        return False      
 
-        print(f"[SERVER] Data failed to send due to error: {e}")
-
-        return False
 
 def main():
 
-    state = {"server_sock": None, "target_sock": None}
+    server_sock = None
+    target_sock = None
 
-    def forward_os_event(event):
+    try:
+        server_sock = server_connect(SERVER_HOST, SERVER_PORT)
+        target_sock = target_sock = target_listener.target_connect(TARGET_HOST, TARGET_PORT)
+        target_sock.settimeout(SOCKET_TIMEOUT)
 
-        if state["server_sock"] is not None:
-            server_send(state["server_sock"], event)
-            
-            print("\n=== OS INPUT RECEIVED ===")
-            print(json.dumps(event, indent=2))
+        print("[CLIENT] Listening for target packets. Press Ctrl+C to stop it.")
 
-            print(f"[SERVER] Payload sent to {SERVER_HOST}:{SERVER_PORT}")
-
-    state["server_sock"] = server_connect(SERVER_HOST, SERVER_PORT)
-    state["target_sock"] = target_listener.target_connect(TARGET_HOST, TARGET_PORT)
-
-    # recorder = os_input_listener.InputRecording(on_event=forward_os_event)
-    # recorder.start()
-
-    try: 
-        while is_recording: 
-
-            payload, addr = target_listener.listen(state["target_sock"])
+        while True:
+            payload, addr = receive_packets(target_sock)
 
             if payload is None:
                 continue
@@ -87,31 +82,32 @@ def main():
             print(f"From : {addr}")
             print(json.dumps(payload, indent=2))
 
-            if state["server_sock"] is None:
-                state["server_sock"] = server_connect(SERVER_HOST, SERVER_PORT)
-            
-            if state["server_sock"] is not None:
-                if server_send(state["server_sock"], payload):
-                    print(f"[SERVER] Payload sent to {SERVER_HOST}:{SERVER_PORT}")
+            if server_sock is None:
+                server_sock = server_connect(SERVER_HOST, SERVER_PORT)
+
+            if server_sock is not None:
+                if server_send(server_sock, payload):
+                    print(f"[SERVER] Payload sent to {SERVER_HOST}:{SERVER_PORT}")         
                 else:
-                    print("[SERVER] Not connected, trying again.")
-                    state["server_sock"].close()
-                    state["server_sock"] = None
+                    server_sock.close()
+                    server_sock = None
+                    print("[SERVER] Disconnected")
 
-    except KeyboardInterrupt: 
-        print("Stop it.")
+    except KeyboardInterrupt:
+        print("\n[CLIENT] Stop it.")
+    
+    except OSError as e:
+        print(f"[CLIENT] Error involving OS: {e}") 
 
-    except Exception as e:
-        print(f"[CLIENT] Error: {e}")
+    finally:
+        if server_sock is not None:
+            server_sock.close()
+            print("[CLIENT] Target socket closed.")
 
-    finally: 
-        if state["server_sock"] is not None:
-            state["server_sock"].close()
-
-        if state["target_sock"] is not None:
-            state["target_sock"].close()
-
-        # recorder.stop()
+        if target_sock is not None:
+            target_sock.close()
+            print("[CLIENT] Server socket closed.")
+           
 
 if __name__ == "__main__":
     main()
