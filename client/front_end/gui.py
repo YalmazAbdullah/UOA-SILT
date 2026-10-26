@@ -65,7 +65,7 @@ def api_enter_log(session_id, payload):
         payload["client_time"] = datetime.now(timezone.utc).isoformat()
     # Ensure required fallback values if fields are missing or None
     if "target_time" not in payload or not payload["target_time"]:
-        payload["target_time"] = payload["client_time"]
+        payload["target_time"] = None
     payload["source"] = payload.get("source") or "client"
     payload["target"] = payload.get("target") or "Unknown Target"
     payload["event"] = payload.get("event") or "Unknown Event"
@@ -96,7 +96,7 @@ def forward_event(payload, label):
             
 def on_os_event(event):
     # Disable OS logs temporarily
-    return 
+     
     if not State.is_recording:
         return
 
