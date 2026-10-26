@@ -50,17 +50,17 @@ def api_end_session(session_id):
     request.raise_for_status()
 
 def api_enter_log(session_id, payload):
-    now = datetime.now(timezone.utc).isoformat()
+    # Ensure client_time exists
+    if "client_time" not in payload or not payload["client_time"]:
+        payload["client_time"] = datetime.now(timezone.utc).isoformat()
+    # Ensure required fallback values if fields are missing or None
+    payload["source"] = payload.get("source") or "client"
+    payload["target"] = payload.get("target") or "Unknown Target"
+    payload["event"] = payload.get("event") or "Unknown Event"
+    if "data" not in payload or payload["data"] is None:
+        payload["data"] = {}
 
-    body = {
-        "target_time": payload.get("target_time"),
-        "client_time": payload.get("client_time", now),
-        "source": payload.get("source", "client"),
-        "target": payload.get("target", "Unknown Target"),
-        "event": payload.get("event", "Unknown Event"),
-        "data": payload.get("data", {}),
-    }
-    request = requests.post(f"{API}/logs/{session_id}", json=body, timeout=5)
+    request = requests.post(f"{API}/logs/{session_id}", json=payload, timeout=5)
     request.raise_for_status()
 
 def forward_event(payload, label):
@@ -68,11 +68,13 @@ def forward_event(payload, label):
     if State.session_id:
         try:
             api_enter_log(State.session_id, payload)
-            log(f"[{label}] Forwarded to server: {payload.get('event','?')}")
+            log(f"[{label}] Forwarded to server: {payload.get('event','?')}, data:{payload.get('data','?')}")
         except Exception as e:
             log(f"[{label}] Failed: {e}")
 
 def on_os_event(event):
+    # Disable OS logs temporarily
+    return
 
     if not State.is_recording:
         return

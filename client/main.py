@@ -72,8 +72,8 @@ def main():
     state["server_sock"] = server_connect(SERVER_HOST, SERVER_PORT)
     state["target_sock"] = target_listener.target_connect(TARGET_HOST, TARGET_PORT)
 
-    recorder = os_input_listener.InputRecording(on_event=forward_os_event)
-    recorder.start()
+    # recorder = os_input_listener.InputRecording(on_event=forward_os_event)
+    # recorder.start()
 
     try: 
         while is_recording: 
@@ -111,7 +111,7 @@ def main():
         if state["target_sock"] is not None:
             state["target_sock"].close()
 
-        recorder.stop()
+        # recorder.stop()
 
 if __name__ == "__main__":
     main()
