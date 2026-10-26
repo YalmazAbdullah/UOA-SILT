@@ -75,7 +75,7 @@ class SessionService:
         # Update the session to ended
         session.session_state = SessionState.ENDED
         session.ended_at = datetime.now(timezone.utc)
-        status = self.database.update_session(str(session.session_id), session.session_state.value)
+        status = self._database.update_session(str(session.session_id), session.session_state.value)
         if not status:
             raise exceptions.SessionUpdatingFailed
         return session 

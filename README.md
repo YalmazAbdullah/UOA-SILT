@@ -1,5 +1,8 @@
 This is a simple toolkit to help researchers interested in logging user interactions. The general architecture of this project is as illustrated below
 
+pip install uv
+uv pip install fastapi uvicorn
+
 <!-- Add image here for the architecture  -->
 
 ## Target
